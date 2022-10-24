@@ -18,13 +18,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Document Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Don't like 10pt? Try 11pt or 12pt
-\documentclass[10pt]{article}
+\documentclass[UTF8, 10pt]{article}
 
 % This is a helpful package that puts math inside length specifications
 \usepackage{calc}
 \usepackage{pifont}
 \usepackage{marvosym}
-
 
 % Simpler bibsection for CV sections
 % (thanks to natbib for inspiration)
@@ -210,7 +209,7 @@
 \def\vs{\vspace{-0.1in}}
 \begin{document}
 % \makeheading{Curriculum Vitae\\ [0.3cm] TIEP HUU VU\quad~~~~~~\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad{\small Last update: December 17, 2015}}
-\makeheading{Quan Meng 孟权 \hfill {\small Last update: \today}}
+\makeheading{Quan Meng \hfill {\small Last update: \today}}
 
 
 \section{Contact Information}
@@ -218,15 +217,22 @@
 \newlength{\rcollength}\setlength{\rcollength}{3 in}
 \vs
 \begin{tabular}[t]{@{}p{\textwidth-\rcollength}p{\rcollength}}
-\texttt{Address}: Pudong, Shanghai, China & \\
-{\faWechat} \texttt{Wechat}: nenhabkks   & {\faMousePointer} \texttt{Homepage:}\href{https://mq66.github.io}{https://mq66.github.io}\\
-{\large\faMobile} \texttt{Tel:} +86 19821254220     &  {\faEnvelopeO} \texttt{E-mail:}\href{mailto:mengquan@shanghaitech.edu.cn}{mengquan@shanghaitech.edu.cn}\\
+\texttt{Address}: Garching, Munich, Germany & \\
+{\faWechat} \texttt{Wechat}: nenhabkks   & {\faMousePointer} \texttt{Homepage:}\href{https://quan-meng.github.io}{https://quan-meng.github.io}\\
+{\large\faMobile} \texttt{Tel:} +49 17685971811     &  {\faEnvelopeO} \texttt{E-mail:}\href{mailto:mengquan@shanghaitech.edu.cn}{mengquan@shanghaitech.edu.cn}\\
 \end{tabular}
 
 
 %% ========= Academic History ==============================
 \section{Academic History}
-\href{https://www.shanghaitech.edu.cn/eng/}{\textbf{ShanghaiTech University}} \hfill Fall 2019 - Spring 2022 (expected)
+\href{https://www.tum.de/en/}{\textbf{Technical University of Munich}} \hfill Fall 2022 - Now
+\begin{outerlist}
+	\item PhD candidate in Computer Science and Engineering
+	\item Advisor: Prof. \href{https://www.3dunderstanding.org}{Angela Dai}
+\end{outerlist}
+
+\vspace{0.1in}
+\href{https://www.shanghaitech.edu.cn/eng/}{\textbf{ShanghaiTech University}} \hfill Fall 2019 - Spring 2022
 \begin{outerlist}
 	\item M.S. in Computer Science and Engineering
 	\item Advisor: Prof. \href{http://www.yu-jingyi.com/cv/}{Jingyi Yu}
@@ -245,13 +251,13 @@
 \vspace{-.25in}
 \begin{enumerate} 
 	\item {\bf Quan Meng}, Anpei Chen, Haimin Luo, Minye Wu, Hao Su, Lan Xu, Xuming He, and Jingyi Yu \\
-	GNeRF: GAN-Based Neural Radiance Field without Posed Camera \\
+	{\bf GNeRF: GAN-Based Neural Radiance Field without Posed Camera} \\
 	\textit{Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), 2021} \\
 	{\bf Oral Presentation: 3.4\%} \\
 	We introduce GNeRF, a method that can estimate neural radiance fields and camera poses jointly when the cameras are initialized at random poses in complex scenarios (outside-in scenes, even with less texture or intense noise). We achieve this by marrying Generative Adversarial Networks (GAN) with Neural Radiance Field.
 	
 	\item {\bf Quan Meng}, Jiakai Zhang, Qiang Hu, Xuming He, and Jingyi Yu \\
-	LGNN: A Context-Aware Line Segment Detector \\
+	{\bf LGNN: A Context-Aware Line Segment Detector} \\
 	\textit{Proceedings of the 28th ACM International Conference on Multimedia (ACM MM), 2020} \\
 	{\bf Poster: 27.9\%} \\
 	Existing approaches require a computationally expensive verification or postprocessing step. Our LGNN employs a deep convolutional neural network (DCNN) for proposing line segments directly, with a graph neural network (GNN) module for reasoning their connectivities. LGNN achieves comparable performance and enables time-sensitive 3D applications. 
@@ -261,6 +267,7 @@
 \section{Honors and Awards}
 \vspace{-0.25in}
 \begin{outerlist}
+\item First prize in Macrochip Cup Microcontroller Application Technology Competition \hfill 2017
 \item First prize in \href{http://www.worldrobotconference.com/en/}{World Robot Contest Fighting Robot Competition}. \hfill 2017
 \item First prize in \href{https://www.nuedc-training.com.cn/}{National Undergraduate Electronics Design Contest (Shandong, China)} \hfill 2017
 \item First prize in \href{https://www.nuedc-training.com.cn/}{National Undergraduate Electronics Design Contest (Shandong, China)} \hfill 2018
@@ -274,7 +281,7 @@
 \label{sec:teaching_exp}
 \vspace{-0.25in}
 \begin{outerlist}
-	\item {\it CS280 Deep Learning} in ShanghaiTech University: Teaching Assistant \hfill Fall 2020
+	\item CS280 Deep Learning in ShanghaiTech University: Teaching Assistant \hfill Fall 2020
 \end{outerlist}
 
 %% ========= Technical Skills ============================
@@ -282,9 +289,9 @@
 \label{sec:technical_ski}
 \vspace{-0.25in}
 \begin{outerlist}
-	\item Programming: Linux, Assembly Language (ARM), C/C++, Python, Java, Pytorch, Opencv, Latex, Matlab, Qt.
+	\item Programming: Linux, Python, C/C++, Pytorch, , Assembly Language (ARM), Java, Opencv, Latex, Matlab, Qt.
+	\item Softwares: Blender, MeshLab, Illustrator, Keil
 	\item Hardwares: Circuit Design, ARM, STM32, STC, PCB. 
-	\item Softwares: Blender, Keil, Illustrator
 \end{outerlist}
 
 %% ========= References ==============================
