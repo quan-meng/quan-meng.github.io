@@ -136,16 +136,14 @@
             </div>
 
             <p class="content-block">
-                We present <span style="font-weight: bold;">LT3SD</span>, a novel latent diffusion model for large-scale 3D scene generation. 
-                
-                Recent advances in diffusion models have shown impressive results in 3D object generation, but are limited in spatial extent and quality when extended to 3D scenes. 
-                To generate complex and diverse 3D scene structures, we introduce a latent tree representation to effectively encode both lower-frequency geometry and higher-frequency 
-                detail in a coarse-to-fine hierarchy. We can then learn a generative diffusion process in this latent 3D scene space, modeling the latent components of a scene at each 
-                resolution level. 
-                
-                To synthesize large-scale scenes with varying sizes, we train our diffusion model on scene patches and synthesize arbitrary-sized output 3D scenes 
-                through shared diffusion generation across multiple scene patches. Through extensive experiments, we demonstrate the efficacy and benefits of <span style="font-weight: bold;">LT3SD</span> for large-scale, 
-                high-quality unconditional 3D scene generation and for probabilistic completion for partial scene observations.
+                We formulate 3D scene generation as a patch-based latent diffusion process. 
+                <strong>Left</strong>: To characterize complex scene geometry, we encode 3D scenes in a novel latent tree representation, where each scene resolution level is decomposed into 
+                a TUDF grid and a latent feature grid. 
+                <strong>Top Right</strong>: During latent tree training, the encoder encodes a patch from the scene grid at resolution level i+1 to a coarser TUDF patch and a latent feature patch at level i. 
+                The decoder then reconstructs the scene patch based on the factorized grids. 
+                <strong>Bottom Right</strong>: During generation, the diffusion model learns to generate a latent 
+                feature patch conditioned on a TUDF patch within the same level. 
+                Our method enables arbitrary-sized 3D scene generation at inference time by synthesizing scenes in a coarse-to-fine hierarchy and a patch-by-patch fashion.
             </p>
 
             <h2 class="text-center pt-3">Comparisons</h2>
