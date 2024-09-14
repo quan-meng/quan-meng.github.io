@@ -93,17 +93,14 @@
             <h2 class="text-center">Abstract</h2>
 
             <p class="content-block">
-            We present <strong>LT3SD</strong>, a novel latent diffusion model for large-scale 3D scene generation.
-            Recent advances in diffusion models have shown impressive results in 3D object generation,
-            but they are limited to the object level and do not scale well to more complex 3D scenes.
-                
-            To generate complex, diverse 3D scene structures, we introduce a latent tree representation to effectively encode both lower-frequency geometry and
-            higher-frequency detail in a coarse-to-fine hierarchy. We can then learn a generative diffusion process in this latent 3D scene space, 
-            modeling the latent components of a scene at each resolution level. To synthesize large-scale scenes with varying sizes, 
-            we train our diffusion model on scene patches and synthesize arbitrary-sized output 3D scenes through shared diffusion generation across multiple scene patches.
-                
-            Through extensive experiments, we demonstrate the efficacy and benefits of <strong>LT3SD</strong> for large-scale, high-quality unconditional 3D scene generation 
-            and for probabilistic completion for partial scene observations.</p>
+                We present <strong>LT3SD</strong>, a novel latent diffusion model for large-scale 3D scene generation. 
+                Recent advances in diffusion models have shown impressive results in 3D object generation, 
+                but are limited in spatial extent and quality when extended to 3D scenes. To generate complex and diverse 3D scene structures, 
+                we introduce a latent tree representation to effectively encode both lower-frequency geometry and higher-frequency detail in a coarse-to-fine hierarchy. 
+                We can then learn a generative diffusion process in this latent 3D scene space, modeling the latent components of a scene at each resolution level. 
+                To synthesize large-scale scenes with varying sizes, we train our diffusion model on scene patches and synthesize arbitrary-sized output 3D scenes 
+                through shared diffusion generation across multiple scene patches. Through extensive experiments, we demonstrate the efficacy 
+                and benefits of <strong>LT3SD</strong> for large-scale, high-quality unconditional 3D scene generation and for probabilistic completion for partial scene observations.
 
             <div class="embed-responsive embed-responsive-16by9">
                 <video class="embed-responsive-item" muted autoplay loop>
@@ -112,7 +109,7 @@
             </div>
             <p class="content-block">
                 <strong>LT3SD</strong> enables high-fidelity generation of infinite 3D environments in a patch-by-patch and coarse-to-fine fashion.
-                A sample of infinite 3D scene mesh can be downloaded <a href="https://tumde-my.sharepoint.com/:u:/g/personal/quan_meng_tum_de/EdCzaK1U9gBAvV_ta_BLQRABqqzthb6a1ZHLrWOkf1zmMw?e=45idDs" target="_blank" rel="noopener noreferrer">here</a>.
+                Samples of generated infinite 3D scene mesh can be downloaded <a href="https://1drv.ms/f/c/e762fb0a44e578db/Euk-_7-eXrVKl4TwQ7lTiUkBshMygyB4U7QLTkPp2jkJMQ?e=wGwcj4" target="_blank" rel="noopener noreferrer">here</a>.
             </p>
                 
             <h2 class="text-center pt-3">Video</h2>
@@ -162,7 +159,7 @@
                 <div class="bibtex">
                     <figure class="highlight">
                         <pre><code class="language-bibtex" data-lang="bibtex">
-@misc{meng2024lt3sdlatenttrees3d,
+@article{meng2024lt3sdlatenttrees3d,
     title={LT3SD: Latent Trees for 3D Scene Diffusion}, 
     author={Quan Meng and Lei Li and Matthias Nießner and Angela Dai},
     journal={arXiv preprint arXiv:2409.08215},
