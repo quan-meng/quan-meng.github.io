@@ -22,4 +22,6 @@
 *.mtc1
 *.out
 *.synctex.gz
-
+*.DS_Store
+*.Identifier
+.*.html
