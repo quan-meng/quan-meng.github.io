@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seen2Scene: Completing Realistic 3D Scenes with Visibility-Guided Flow</title>
+    <meta name="description" content="Seen2Scene: the first flow matching-based approach that trains directly on incomplete, real-world 3D scans for scene completion and generation.">
+    <meta property="og:title" content="Seen2Scene: Completing Realistic 3D Scenes with Visibility-Guided Flow">
+    <meta property="og:description" content="The first flow matching-based approach for 3D scene completion from real-world scans.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../../assets/seen2scene/static/images/teaser.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../../assets/seen2scene/static/css/bulma.min.css">
+<style>
+:root {
+    --brand: rgb(35, 38, 59);
+    --brand-border: rgba(35, 38, 59, 0.12);
+    --text-body: #3a3a3a;
+    --text-caption: #4a4a4a;
+    --radius: 12px;
+    --radius-lg: 14px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--text-body); background: #fff; }
+
+/* TYPOGRAPHY */
+h1.pub-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    color: var(--brand);
+    line-height: 1.25;
+    margin-bottom: 1.2rem;
+}
+h2.sec-title {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 1.2rem;
+}
+h3.sub-heading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.pub-authors {
+    font-size: 1.05rem;
+    color: #444;
+    margin-bottom: 0.3rem;
+}
+.pub-authors a { color: var(--brand); text-decoration: none; }
+.pub-authors a:hover { text-decoration: underline; }
+.affiliation { font-size: 0.92rem; color: #666; margin-bottom: 0.2rem; }
+
+/* BUTTONS */
+.resource-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--brand);
+    color: #fff !important;
+    border-radius: 30px;
+    padding: 7px 18px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+}
+.resource-btn:hover { opacity: 0.85; color: #fff !important; }
+.resource-btn.disabled { opacity: 0.35; pointer-events: none; }
+.resource-btns { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 1.5rem; }
+
+/* SECTIONS */
+.sec { padding: 3.5rem 1.5rem; }
+.sec-alt { background: #f7f8fa; }
+.sec-inner { max-width: 900px; margin: 0 auto; }
+.sec-inner.wide { max-width: 1100px; }
+.sec-subtitle { font-size: 0.97rem; color: var(--text-caption); margin-bottom: 1.8rem; line-height: 1.65; }
+.sec-divider { border: none; border-top: 1px solid #e5e7eb; margin: 2.5rem 0; }
+
+/* FIGURES & CAPTIONS */
+.fig-wrap { border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.09); margin-bottom: 0.8rem; }
+.fig-wrap img { width: 100%; display: block; }
+.fig-caption { font-size: 0.9rem; color: var(--text-caption); line-height: 1.7; text-align: justify; }
+.fig-caption strong { color: var(--text-body); }
+
+/* VIDEOS */
+video {
+    border-radius: var(--radius);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.09);
+    display: block;
+}
+.vid-wrap { border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.09); background: #000; position: relative; }
+.vid-wrap video { width: 100%; display: block; border-radius: 0; box-shadow: none; }
+.video-label { position: absolute; top: 8px; left: 8px; background: rgba(35,38,59,0.75); color: #fff; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; z-index: 2; }
+
+/* GRIDS */
+.v2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.v3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media (max-width: 640px) { .v2col, .v3col { grid-template-columns: 1fr; } }
+
+/* CAROUSEL */
+.carousel-wrap { position: relative; max-width: 1100px; margin: 0 auto; overflow: hidden; padding: 0 3rem; }
+.carousel-track { display: flex; transition: transform 0.45s cubic-bezier(.4,0,.2,1); }
+.carousel-slide { min-width: 100%; padding: 0 0.4rem; }
+.carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #ddd; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; transition: all 0.15s; }
+.carousel-arrow:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+.carousel-prev { left: 0; } .carousel-next { right: 0; }
+.carousel-dots { display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.8rem; }
+.carousel-dot { width: 9px; height: 9px; border-radius: 50%; border: none; background: #ccc; cursor: pointer; padding: 0; transition: all 0.15s; }
+.carousel-dot.active { background: var(--brand); transform: scale(1.2); }
+
+/* BEFORE/AFTER */
+.ba-compare { position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,0.12); background: #000; cursor: col-resize; user-select: none; -webkit-user-select: none; touch-action: none; }
+.ba-compare .ba-bg { width: 100%; display: block; }
+.ba-compare .ba-fg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; clip-path: inset(0 50% 0 0); }
+.ba-compare .ba-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 6px rgba(0,0,0,0.4); z-index: 10; transform: translateX(-50%); pointer-events: none; }
+.ba-compare .ba-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 2px solid var(--brand); pointer-events: auto; cursor: col-resize; }
+.ba-compare .ba-handle::before { content: '\2194'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 1; font-size: 12px; color: var(--brand); font-weight: 700; pointer-events: none; }
+.ba-label { position: absolute; top: 10px; background: rgba(35,38,59,0.8); color: #fff; font-size: 0.73rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; z-index: 5; pointer-events: none; }
+.ba-label-l { left: 10px; } .ba-label-r { right: 10px; background: rgba(35,38,59,0.9) !important; }
+
+/* MULTI-WAY COMPARISON */
+.cv-wrap { max-width: 960px; margin: 0 auto; }
+.cv-viewport { position: relative; overflow: hidden; border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.12); background: #000; user-select: none; -webkit-user-select: none; touch-action: none; }
+.cv-viewport video { display: block; width: 100%; border-radius: 0; box-shadow: none; }
+.cv-viewport video:not(:first-child) { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.cv-divider { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.9); box-shadow: 0 0 6px rgba(0,0,0,0.4); z-index: 20; cursor: col-resize; transform: translateX(-50%); }
+.cv-divider::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.25); border: 2px solid var(--brand); }
+.cv-divider::before { content: '\2194'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 1; font-size: 13px; color: var(--brand); font-weight: 700; }
+.cv-seg-label { position: absolute; top: 10px; background: rgba(35,38,59,0.8); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; z-index: 15; pointer-events: none; white-space: nowrap; transform: translateX(-50%); }
+
+/* ABSTRACT */
+.abstract-text { font-size: 1rem; line-height: 1.85; color: var(--text-caption); text-align: justify; }
+.abstract-text strong { color: var(--text-body); }
+
+/* BIBTEX */
+.bib-box { background: transparent; border-radius: var(--radius-lg); padding: 1.4rem 1.6rem; position: relative; overflow-x: auto; }
+.bib-box pre { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 0.88rem; line-height: 1.7; color: var(--text-body) !important; background: transparent !important; padding: 0 !important; white-space: pre; overflow-x: auto; margin: 0; }
+.copy-btn { position: absolute; top: 0.8rem; right: 0.8rem; background: var(--brand); border: none; color: #fff; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.copy-btn:hover { opacity: 0.8; }
+
+/* FOOTER */
+footer { background: #f7f8fa; border-top: 1px solid #e5e7eb; padding: 2rem 1.5rem; text-align: center; }
+footer p { color: #999; font-size: 0.82rem; }
+footer a { color: #888; text-decoration: none; }
+footer a:hover { color: var(--brand); }
+
+/* DARK THEME */
+body.dark {
+    --brand: rgb(35, 38, 59);
+    --brand-border: rgba(255, 255, 255, 0.1);
+    --text-body: #e2e8f0;
+    --text-caption: #a0aec0;
+    background: #111;
+    color: var(--text-body);
+}
+body.dark .sec-alt { background: #1a1a1a; }
+body.dark footer { background: #1a1a1a; border-top-color: #2a2a2a; }
+body.dark footer p, body.dark footer a { color: #555; }
+body.dark footer a:hover { color: #aaa; }
+body.dark h1.pub-title, body.dark h2.sec-title, body.dark h3.sub-heading { color: #e2e8f0; }
+body.dark .carousel-arrow { background: #222; border-color: #333; color: #aaa; }
+body.dark .carousel-arrow:hover { background: #444; color: #fff; border-color: #444; }
+body.dark .carousel-dot { background: #333; }
+body.dark .carousel-dot.active { background: #aaa; }
+body.dark .bib-box { background: transparent; }
+body.dark .resource-btn { background: #333; color: #fff !important; }
+body.dark .resource-btn:hover { background: #444; }
+body.dark .pub-authors a { color: #ccc; }
+body.dark .fig-caption, body.dark .sec-subtitle, body.dark .abstract-text { color: #a0aec0; }
+
+/* HOVER ZOOM OVERLAY (sc + scb) */
+.scb-container { position: relative; }
+.scb-hover-overlay {
+    position: absolute;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 0.45rem 0.5rem 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    border-radius: 8px;
+    z-index: 20;
+    transform: translateX(-50%);
+}
+.scb-container:hover .scb-hover-overlay { opacity: 1; }
+.scb-hover-grid { display: grid; gap: 0.3rem; }
+/* zoom cell: video scaled via transform; transform-origin tracks mouse position */
+.scb-hover-cell .vid-wrap {
+    border-radius: 5px;
+    box-shadow: none;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 3 / 4;
+}
+.scb-hover-cell .vid-wrap video {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    left: auto !important;
+    top: auto !important;
+    display: block !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: scale(6.6667);
+    transform-origin: calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%);
+}
+.scb-hover-cell .video-label { font-size: 0.6rem; padding: 2px 5px; }
+
+/* SG single zoom overlay */
+.sg-zoom-overlay { width: 480px; padding: 0.4rem; }
+.sg-zoom-cell .vid-wrap {
+    border-radius: 5px;
+    box-shadow: none;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16 / 9;
+}
+.sg-zoom-cell .vid-wrap video {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    left: auto !important;
+    top: auto !important;
+    display: block !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: scale(5);
+    transform-origin: calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%);
+}
+
+/* Hover hint badge */
+.scb-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(35, 38, 59, 0.72);
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    padding: 8px 26px;
+    border-radius: 20px;
+    z-index: 6;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+    animation: scb-hint-pulse 1.6s ease-in-out 2;
+}
+.scb-hint.hidden { opacity: 0; }
+.scb-container:hover .scb-hint,
+.scb-container.active .scb-hint { opacity: 0; }
+@keyframes scb-hint-pulse {
+    0%, 100% { transform: translateX(-50%) scale(1);   opacity: 1; }
+    50%       { transform: translateX(-50%) scale(1.06); opacity: 0.85; }
+}
+
+/* Highlight crop region on main video */
+.scb-highlight {
+    position: absolute;
+    pointer-events: none;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.45);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    border-radius: 2px;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+.scb-container:hover .scb-highlight { opacity: 1; }
+
+/* THEME TOGGLE */
+.theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 999;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid var(--brand-border);
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+body.dark .theme-toggle {
+    background: #222;
+    border-color: #333;
+    color: #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.theme-toggle:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle" title="Toggle dark mode" onclick="toggleTheme()">
+    <span id="theme-icon">☾</span>
+</button>
+
+<!-- HERO -->
+<section class="sec" style="padding-top: 4rem; padding-bottom: 2rem;">
+    <div class="sec-inner" style="text-align: center;">
+        <h1 class="pub-title">
+            Seen2Scene: Completing Realistic 3D Scenes<br>
+            with Visibility-Guided Flow
+        </h1>
+        <p class="pub-authors">
+            <a href="https://quan-meng.github.io">Quan Meng</a><sup>1</sup>,&nbsp;
+            <a href="https://terencecyj.github.io">Yujin Chen</a><sup>1</sup>,&nbsp;
+            <a href="https://craigleili.github.io">Lei Li</a><sup>2</sup>,&nbsp;
+            <a href="https://niessnerlab.org">Matthias Nie&szlig;ner</a><sup>1</sup>,&nbsp;
+            <a href="https://www.3dunderstanding.org/team.html">Angela Dai</a><sup>1</sup>
+        </p>
+        <p class="affiliation"><sup>1</sup>Technical University of Munich &nbsp; <sup>2</sup>University of Virginia</p>
+        <div class="resource-btns">
+            <a class="resource-btn" href="http://arxiv.org/abs/2603.28548">arXiv</a>
+            <a class="resource-btn" href="http://arxiv.org/pdf/2603.28548">Paper</a>
+            <a class="resource-btn" href="https://github.com/quan-meng/seen2scene">Code</a>
+        </div>
+    </div>
+</section>
+
+<!-- DEMO CAROUSEL: input & ours with drag slider -->
+<section class="sec sec-alt" style="padding-top: 1.5rem; padding-bottom: 2rem;">
+    <div class="sec-inner wide">
+        <div class="vid-wrap" style="width:100%;">
+            <video autoplay muted loop playsinline webkit-playsinline preload="auto" style="width:100%;display:block;border-radius:0;box-shadow:none;"><source src="../../assets/seen2scene/videos/ClipSocialMedia.mp4" type="video/mp4"></video>
+        </div>
+        <p style="text-align:center;margin-top:0.8rem;font-size:0.88rem;color:var(--text-caption);">
+            <strong>Seen2Scene</strong> takes an incomplete real-world 3D scan and generates a complete, coherent 3D scene using visibility-guided flow matching &mdash; trained directly on real-world data.
+        </p>
+    </div>
+</section>
+
+<!-- ABSTRACT -->
+<section class="sec" id="abstract">
+    <div class="sec-inner">
+        <h2 class="sec-title">Abstract</h2>
+        <p class="abstract-text">
+            We present <strong>Seen2Scene</strong>, the first flow matching&ndash;based approach that trains directly on
+            incomplete, real-world 3D scans for scene completion and generation. Unlike prior methods that rely on complete
+            and hence synthetic 3D data, our approach introduces <strong>visibility-guided flow matching</strong>, which
+            explicitly masks out unknown regions in real scans, enabling effective learning from real-world, partial observations.
+            We represent 3D scenes using truncated signed distance fields (TSDFs) encoded in sparse grids and employ a
+            sparse transformer to efficiently model complex scene structures while masking unknown regions.
+            We employ 3D layout boxes as an input conditioning signal, and our approach is flexibly adapted to various
+            other inputs such as text or partial scans.
+            By learning directly from real-world, incomplete 3D scans, Seen2Scene enables realistic 3D scene completion for complex, cluttered real environments.
+            Experiments demonstrate that our model produces coherent, complete, and realistic 3D scenes, outperforming baselines in completion accuracy and generation quality.
+        </p>
+    </div>
+</section>
+
+<!-- VIDEO -->
+<section class="sec sec-alt" id="video">
+    <div class="sec-inner">
+        <h2 class="sec-title">Video</h2>
+        <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+            <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" src="https://www.youtube.com/embed/5qJYLjMsJe8" title="Seen2Scene" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+</section>
+
+<!-- METHOD -->
+<section class="sec sec-alt" id="method">
+    <div class="sec-inner wide">
+        <h2 class="sec-title">Method</h2>
+        <p class="sec-subtitle">Visibility-guided flow matching on sparse TSDF representations.</p>
+        <div class="cv-wrap"><div class="fig-wrap"><img src="../../assets/seen2scene/static/images/pipeline.png" alt="Pipeline"></div></div>
+        <p class="fig-caption"><strong>Overview of Seen2Scene.</strong> We introduce visibility-guided flow matching for modeling the distribution of TSDF partial scans. <strong>(a)</strong> Partial scan TSDF patches <strong>v</strong> are encoded by a masked sparse VAE (&Escr;<sub>&tau;</sub>, &Dscr;<sub>&tau;</sub>) into latent representations <strong>z</strong>, masking out unknown regions unseen by the camera. <strong>(b)</strong> A sparse transformer &Gscr;<sub>&psi;</sub> conditioned on 3D layout boxes &Bscr; is trained with masked flow matching on surface and empty region tokens. <strong>(c)</strong> We fine-tune &Gscr;<sub>&psi;</sub> for scan completion by injecting partial scan inputs <strong>v</strong><sup>p</sup> via ControlNet. <strong>(d)</strong> &Gscr;<sub>&psi;</sub> can also be flexibly adapted for text or layout-conditioned 3D scene generation from scratch.</p>
+    </div>
+</section>
+
+<!-- SCENE COMPLETION -->
+<section class="sec" id="scene-completion">
+    <div class="sec-inner wide">
+        <h2 class="sec-title">Scene Completion</h2>
+
+        <h3 class="sub-heading">Comparison with Baselines</h3>
+        <p class="fig-caption" style="margin-bottom:1.2rem;text-align:center"><strong>Qualitative comparison.</strong> Seen2Scene vs SG-NN and NKSR on ScanNet++ and ARKitScenes.</p>
+        <div class="carousel-wrap">
+            <button class="carousel-arrow carousel-prev" onclick="secCarousel('scb',-1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <div class="carousel-track" id="scb-track"></div>
+            <button class="carousel-arrow carousel-next" onclick="secCarousel('scb',1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <div class="carousel-dots" id="scb-dots"></div>
+
+        <div class="sec-divider"></div>
+
+        <h3 class="sub-heading">Scene Completion Demo</h3>
+        <p class="fig-caption" style="margin-bottom:1.2rem;text-align:center">Side-by-side comparison with ground truth across multiple scenes.</p>
+        <div class="carousel-wrap">
+            <button class="carousel-arrow carousel-prev" onclick="secCarousel('sc',-1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <div class="carousel-track" id="sc-track"></div>
+            <button class="carousel-arrow carousel-next" onclick="secCarousel('sc',1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <div class="carousel-dots" id="sc-dots"></div>
+    </div>
+</section>
+
+<!-- SCENE GENERATION -->
+<section class="sec sec-alt" id="scene-generation">
+    <div class="sec-inner wide">
+        <h2 class="sec-title">Scene Generation</h2>
+
+        <h3 class="sub-heading">Comparison with Baselines</h3>
+        <p class="fig-caption" style="margin-bottom:1.2rem;text-align:center">Layout-conditioned 3D scene generation from semantic bounding boxes.</p>
+        <div class="carousel-wrap">
+            <button class="carousel-arrow carousel-prev" onclick="secCarousel('sg',-1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <div class="carousel-track" id="sg-track"></div>
+            <button class="carousel-arrow carousel-next" onclick="secCarousel('sg',1)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <div class="carousel-dots" id="sg-dots"></div>
+
+        <div class="sec-divider"></div>
+
+        <h3 class="sub-heading" id="text-to-3d">Text-to-3D Generation</h3>
+        <p class="sec-subtitle" style="text-align:center">Natural language prompts translated to 3D layouts via LLM, then generated by Seen2Scene.</p>
+        <div class="cv-wrap lazy-videos">
+            <div class="vid-wrap"><video muted loop playsinline webkit-playsinline preload="none" data-src="../../assets/seen2scene/videos/Slide7TextTo3D.mp4"></video></div>
+        </div>
+    </div>
+</section>
+
+
+<!-- CITATION -->
+<section class="sec sec-alt" id="citation">
+    <div class="sec-inner">
+        <h2 class="sec-title">BibTeX</h2>
+        <div class="bib-box">
+            <button class="copy-btn" onclick="copyBibtex(this)">⎘ Copy</button>
+<pre id="bibtex-text">@misc{meng2026seen2scene,
+  title         = {Seen2Scene: Completing Realistic 3D Scenes
+                   with Visibility-Guided Flow},
+  author        = {Quan Meng and Yujin Chen and Lei Li
+                   and Matthias Nie{\ss}ner and Angela Dai},
+  year          = {2026},
+  eprint        = {2603.28548},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2603.28548}
+}</pre>
+        </div>
+    </div>
+</section>
+
+<footer><p>Website inspired by <a href="https://liuwei283.github.io/RealWonder/" target="_blank">RealWonder</a> and <a href="https://nerfies.github.io/" target="_blank">Nerfies</a>.</p></footer>
+
+<script>
+/* ===== Connection & concurrency ===== */
+var slowNet = false;
+var MAX_PLAYING = 6;
+
+/* Page Visibility — zero CPU when tab is hidden (webkit prefix for older Safari) */
+function onVisibilityChange() {
+    var hidden = document.hidden || document.webkitHidden;
+    document.querySelectorAll('video').forEach(function(v) {
+        if (hidden) {
+            if (!v.paused) { v._pv = true; v.pause(); }
+        } else if (v._pv) {
+            v._pv = false;
+            if (!v._vp && !v._hp) v.play().catch(function(){});
+        }
+    });
+}
+document.addEventListener('visibilitychange', onVisibilityChange);
+document.addEventListener('webkitvisibilitychange', onVisibilityChange);
+
+/* smartPlay — caps concurrent decoders; evicts the video farthest from viewport center */
+function smartPlay(v) {
+    if (v._vp || v._hp || v._pv) return;
+    var playing = Array.from(document.querySelectorAll('video')).filter(function(x) { return !x.paused && x !== v; });
+    if (playing.length >= MAX_PLAYING) {
+        playing.sort(function(a, b) {
+            function dist(el) { var r = el.getBoundingClientRect(); return Math.abs(r.top + r.height / 2 - window.innerHeight / 2); }
+            return dist(b) - dist(a);
+        });
+        playing[0]._lim = true; playing[0].pause();
+    }
+    v._lim = false;
+    v.play().catch(function(){});
+}
+
+/* releaseSlide — pause off-carousel slides to free decode resources */
+function releaseSlide(slide) {
+    slide.querySelectorAll('video').forEach(function(v) {
+        if (!v.paused) v.pause();
+    });
+}
+
+/* ===== Helpers ===== */
+function makeVid(src, lazy) {
+    var v = document.createElement('video');
+    v.muted = true; v.loop = true; v.playsInline = true;
+    v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); v.setAttribute('decoding', 'async');
+    if (lazy || slowNet) { v.preload = 'none'; v.dataset.src = src; }
+    else { v.preload = 'auto'; v.autoplay = true; v.src = src; }
+    return v;
+}
+function activateVideos(container) {
+    container.querySelectorAll('video').forEach(function(v) {
+        if (v.dataset.src && !v._loaded) {
+            v.src = v.dataset.src; v.load(); v._loaded = true;
+            v.addEventListener('canplay', function() { smartPlay(v); }, { once: true });
+        } else {
+            smartPlay(v);
+        }
+    });
+}
+function deactivateVideos(container) {
+    container.querySelectorAll('video').forEach(function(v) { v.pause(); });
+}
+
+/* ===== Demo Carousel (before/after) ===== */
+var cIdx = 0;
+function carouselGo(i) {
+    var old = cIdx; cIdx = Math.max(0, Math.min(2, i));
+    document.getElementById('carousel-track').style.transform = 'translateX(-' + (cIdx * 100) + '%)';
+    document.querySelectorAll('.carousel-dots .carousel-dot').forEach(function(d, j) { d.classList.toggle('active', j === cIdx); });
+    var slides = document.querySelectorAll('#carousel-track .carousel-slide');
+    if (old !== cIdx) deactivateVideos(slides[old]);
+    var slide = slides[cIdx], comp = slide.querySelector('.ba-compare');
+    if (!comp.querySelector('.ba-bg')) {
+        var bg = makeVid(comp.dataset.bg, false); bg.className = 'ba-bg';
+        var fg = makeVid(comp.dataset.fg, false); fg.className = 'ba-fg';
+        comp.insertBefore(fg, comp.querySelector('.ba-handle'));
+        comp.insertBefore(bg, fg);
+        baInitOne(comp);
+    } else { activateVideos(slide); }
+}
+function carouselMove(d) { carouselGo(cIdx + d); }
+
+/* Before/After slider */
+function baInitOne(c) {
+    var fg = c.querySelector('.ba-fg'), bg = c.querySelector('.ba-bg'), h = c.querySelector('.ba-handle');
+    if (!fg || !bg) return;
+    function set(p) { p = Math.max(.02, Math.min(.98, p)); fg.style.clipPath = 'inset(0 ' + ((1 - p) * 100) + '% 0 0)'; h.style.left = (p * 100) + '%'; }
+    function mv(cx) { var r = c.getBoundingClientRect(); set((cx - r.left) / r.width); }
+    c.addEventListener('mousedown', function(e) {
+        e.preventDefault(); mv(e.clientX);
+        function mm(ev) { mv(ev.clientX); }
+        function mu() { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); }
+        document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
+    });
+    c.addEventListener('touchstart', function(e) { mv(e.touches[0].clientX); }, { passive: true });
+    c.addEventListener('touchmove', function(e) { mv(e.touches[0].clientX); }, { passive: true });
+    set(.5);
+    (function sync() { if (bg.readyState >= 2 && fg.readyState >= 2 && Math.abs(bg.currentTime - fg.currentTime) > .1) fg.currentTime = bg.currentTime; requestAnimationFrame(sync); })();
+}
+function baInit() { document.querySelectorAll('.ba-compare').forEach(function(c) { if (c.querySelector('.ba-bg')) baInitOne(c); }); }
+
+/* ===== Section Carousels ===== */
+var SEC = {};
+SEC.cfg = {
+    sc: { idx: 0, total: 3, labels: ['Input Scan', 'Seen2Scene', 'Ground Truth'], scenes: ['f8f12e4e6b', 'ea3b3710a2', 'e1b1d9de55'],
+        url: function(s, m) { return '../../assets/seen2scene/videos/sc/' + this.scenes[s] + '_' + ['Input', 'Completion', 'GT'][m] + '.mp4'; } },
+    scb: { idx: 0, total: 3, labels: ['Input', 'SG-NN', 'NKSR', 'Seen2Scene', 'Ground Truth'], scenes: ['deb1867829_3.3_0.0_-0.0', 'daffc70503_2.0_0.0_0.0', '471422_-1.6_-2.3_164.1'],
+        url: function(s, m) { var id = this.scenes[s]; if (m === 0) return '../../assets/seen2scene/scene_completion/ours/' + id + '/orbit_frames_input.mp4'; if (m === 1) return '../../assets/seen2scene/scene_completion/sgnn/' + id + '/orbit_frames_pred.mp4'; if (m === 2) return '../../assets/seen2scene/scene_completion/nksr/' + id + '/orbit_frames_pred.mp4'; if (m === 3) return '../../assets/seen2scene/scene_completion/ours/' + id + '/orbit_frames_pred.mp4'; return '../../assets/seen2scene/scene_completion/ours/' + id + '/orbit_frames_target.mp4'; } },
+    sg: { idx: 0, total: 3,
+        url: function(s) { return '../../assets/seen2scene/sg_baselines/merged/sg_comparison_sample_' + s + '.mp4'; } }
+};
+
+function buildSliderVP(g, si, lazy) {
+    var c = SEC.cfg[g], n = c.labels.length;
+    var vp = document.createElement('div'); vp.className = 'cv-viewport';
+    var dividers = [];
+    for (var i = 0; i < n; i++) vp.appendChild(makeVid(c.url(si, i), lazy));
+    for (var i = 0; i < n - 1; i++) { var d = document.createElement('div'); d.className = 'cv-divider'; d.dataset.idx = i; vp.appendChild(d); dividers.push((i + 1) / n); }
+    for (var i = 0; i < n; i++) { var l = document.createElement('span'); l.className = 'cv-seg-label'; l.textContent = c.labels[i]; vp.appendChild(l); }
+    vp._dividers = dividers; vp._n = n;
+    return vp;
+}
+
+function buildHoverZoomSlide(g, si, lazy) {
+    var c = SEC.cfg[g];
+    var n = c.labels.length;
+    var cropSizeX = 0.15, cropSizeY = 0.35;
+    var container = document.createElement('div');
+    container.className = 'scb-container';
+
+    // Main input video (full width)
+    var mainWrap = document.createElement('div');
+    mainWrap.className = 'vid-wrap';
+    mainWrap.style.position = 'relative';
+    var mainVid = makeVid(c.url(si, 0), lazy);
+    mainWrap.appendChild(mainVid);
+    var mainLbl = document.createElement('span');
+    mainLbl.className = 'video-label';
+    mainLbl.textContent = c.labels[0];
+    mainWrap.appendChild(mainLbl);
+    var highlight = document.createElement('div');
+    highlight.className = 'scb-highlight';
+    mainWrap.appendChild(highlight);
+    container.appendChild(mainWrap);
+    var hint = document.createElement('div');
+    hint.className = 'scb-hint';
+    hint.textContent = '⊕ hover to see zoom-ins';
+    container.appendChild(hint);
+
+    // Hover overlay: 1 row × n columns of zoom-ins
+    var overlay = document.createElement('div');
+    overlay.className = 'scb-hover-overlay';
+    var grid = document.createElement('div');
+    grid.className = 'scb-hover-grid';
+    grid.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+
+    var hoverVids = [], cells = [];
+    for (var m = 0; m < n; m++) {
+        var cell = document.createElement('div');
+        cell.className = 'scb-hover-cell';
+        cells.push(cell);
+        var vw = document.createElement('div'); vw.className = 'vid-wrap';
+        var hv = makeVid(c.url(si, m), true);
+        hoverVids.push(hv);
+        vw.appendChild(hv);
+        var lbl = document.createElement('span'); lbl.className = 'video-label';
+        lbl.textContent = c.labels[m];
+        vw.appendChild(lbl);
+        cell.appendChild(vw);
+        grid.appendChild(cell);
+    }
+    overlay.appendChild(grid);
+    container.appendChild(overlay);
+
+    // Set overlay width based on column count
+    overlay.style.width = Math.min(96, n * 16) + '%';
+
+    // Shared: update zoom centers, highlight rect, and overlay position
+    function handleMove(relX, relY, r) {
+        var mx = Math.max(cropSizeX / 2, Math.min(1 - cropSizeX / 2, relX / r.width));
+        var my = Math.max(cropSizeY / 2, Math.min(1 - cropSizeY / 2, relY / r.height));
+        cells.forEach(function(cell) {
+            cell.style.setProperty('--mx', mx);
+            cell.style.setProperty('--my', my);
+        });
+        var hw = cropSizeX * r.width, hh = cropSizeY * r.height;
+        highlight.style.left   = (mx * r.width  - hw / 2) + 'px';
+        highlight.style.top    = (my * r.height - hh / 2) + 'px';
+        highlight.style.width  = hw + 'px';
+        highlight.style.height = hh + 'px';
+        var overlayW = overlay.offsetWidth || r.width * n * 0.16;
+        var overlayH = overlay.offsetHeight || 80;
+        var gap = 14;
+        var clampedX = Math.max(overlayW / 2, Math.min(r.width - overlayW / 2, relX));
+        var topPos = relY - overlayH - gap;
+        if (topPos < 4) topPos = relY + gap;
+        overlay.style.left = clampedX + 'px';
+        overlay.style.top  = topPos + 'px';
+    }
+
+    var syncRAF = null;
+    function startHover() {
+        mainVid.playbackRate = 0.35;
+        hoverVids.forEach(function(v) {
+            if (v.dataset.src && !v._loaded) { v.src = v.dataset.src; v.load(); v._loaded = true; }
+            v.playbackRate = 0.35;
+            v.currentTime = mainVid.currentTime;
+            if (!mainVid.paused) v.play().catch(function(){});
+        });
+        if (syncRAF) return;
+        (function syncLoop() {
+            var t = mainVid.currentTime;
+            hoverVids.forEach(function(v) {
+                if (mainVid.paused) {
+                    if (!v.paused) v.pause();
+                    if (!v.seeking && v.readyState >= 1 && Math.abs(v.currentTime - t) > 0.033) v.currentTime = t;
+                } else {
+                    if (v.paused && !v.seeking) v.play().catch(function(){});
+                    if (!v.seeking && v.readyState >= 2 && Math.abs(v.currentTime - t) > 0.15) v.currentTime = t;
+                }
+            });
+            syncRAF = requestAnimationFrame(syncLoop);
+        }());
+    }
+    function stopHover() {
+        mainVid.playbackRate = 1;
+        if (syncRAF) { cancelAnimationFrame(syncRAF); syncRAF = null; }
+        hoverVids.forEach(function(v) { v.pause(); v.playbackRate = 1; });
+        overlay.style.opacity = '';
+        highlight.style.opacity = '';
+    }
+
+    // Mouse
+    container.addEventListener('mouseenter', startHover);
+    container.addEventListener('mouseleave', stopHover);
+    mainWrap.addEventListener('mousemove', function(e) {
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.clientX - r.left, e.clientY - r.top, r);
+    });
+
+    // Touch (mobile / tablet)
+    mainWrap.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        overlay.style.opacity = '1';
+        highlight.style.opacity = '1';
+        startHover();
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top, r);
+    }, { passive: false });
+    mainWrap.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top, r);
+    }, { passive: false });
+    mainWrap.addEventListener('touchend', stopHover, { passive: true });
+
+    return container;
+}
+
+function buildSgGrid(si, lazy) {
+    var c = SEC.cfg.sg;
+    var zoomScale = 5; // keep in sync with CSS scale() and var S below
+    var cropSizeX = 1 / zoomScale, cropSizeY = 1 / zoomScale;
+    var container = document.createElement('div');
+    container.className = 'scb-container';
+
+    // Main merged video
+    var mainWrap = document.createElement('div');
+    mainWrap.className = 'vid-wrap';
+    mainWrap.style.position = 'relative';
+    var mainVid = makeVid(c.url(si), lazy);
+    mainWrap.appendChild(mainVid);
+    var highlight = document.createElement('div');
+    highlight.className = 'scb-highlight';
+    mainWrap.appendChild(highlight);
+    container.appendChild(mainWrap);
+    var hint = document.createElement('div');
+    hint.className = 'scb-hint';
+    hint.textContent = '\u2295 hover to zoom in';
+    container.appendChild(hint);
+
+    // Single zoom-in overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'scb-hover-overlay sg-zoom-overlay';
+    var cell = document.createElement('div');
+    cell.className = 'scb-hover-cell sg-zoom-cell';
+    var vw = document.createElement('div'); vw.className = 'vid-wrap';
+    var hoverVid = makeVid(c.url(si), true);
+    vw.appendChild(hoverVid);
+    cell.appendChild(vw);
+    overlay.appendChild(cell);
+    container.appendChild(overlay);
+
+    var S = 5; // must match CSS scale()
+    function handleMove(relX, relY, r) {
+        var mx = Math.max(cropSizeX / 2, Math.min(1 - cropSizeX / 2, relX / r.width));
+        var my = Math.max(cropSizeY / 2, Math.min(1 - cropSizeY / 2, relY / r.height));
+        // transform-origin that centers the visible zoom region on (mx, my)
+        var ox = (S * mx - 0.5) / (S - 1);
+        var oy = (S * my - 0.5) / (S - 1);
+        cell.style.setProperty('--mx', ox);
+        cell.style.setProperty('--my', oy);
+        var hw = cropSizeX * r.width, hh = cropSizeY * r.height;
+        highlight.style.left   = (mx * r.width  - hw / 2) + 'px';
+        highlight.style.top    = (my * r.height - hh / 2) + 'px';
+        highlight.style.width  = hw + 'px';
+        highlight.style.height = hh + 'px';
+        var overlayW = overlay.offsetWidth || 280;
+        var overlayH = overlay.offsetHeight || 200;
+        var gap = 14;
+        var clampedX = Math.max(overlayW / 2, Math.min(r.width - overlayW / 2, relX));
+        var topPos = relY - overlayH - gap;
+        if (topPos < 4) topPos = relY + gap;
+        overlay.style.left = clampedX + 'px';
+        overlay.style.top  = topPos + 'px';
+    }
+
+    var syncRAF = null;
+    function startHover() {
+        mainVid.playbackRate = 0.35;
+        if (hoverVid.dataset.src && !hoverVid._loaded) { hoverVid.src = hoverVid.dataset.src; hoverVid.load(); hoverVid._loaded = true; }
+        hoverVid.playbackRate = 0.35;
+        hoverVid.currentTime = mainVid.currentTime;
+        if (!mainVid.paused) hoverVid.play().catch(function(){});
+        if (syncRAF) return;
+        (function syncLoop() {
+            var t = mainVid.currentTime;
+            if (mainVid.paused) {
+                if (!hoverVid.paused) hoverVid.pause();
+                if (!hoverVid.seeking && hoverVid.readyState >= 1 && Math.abs(hoverVid.currentTime - t) > 0.033) hoverVid.currentTime = t;
+            } else {
+                if (hoverVid.paused && !hoverVid.seeking) hoverVid.play().catch(function(){});
+                if (!hoverVid.seeking && hoverVid.readyState >= 2 && Math.abs(hoverVid.currentTime - t) > 0.15) hoverVid.currentTime = t;
+            }
+            syncRAF = requestAnimationFrame(syncLoop);
+        }());
+    }
+    function stopHover() {
+        mainVid.playbackRate = 1;
+        if (syncRAF) { cancelAnimationFrame(syncRAF); syncRAF = null; }
+        hoverVid.pause(); hoverVid.playbackRate = 1;
+        overlay.style.opacity = '';
+        highlight.style.opacity = '';
+    }
+
+    container.addEventListener('mouseenter', startHover);
+    container.addEventListener('mouseleave', stopHover);
+    mainWrap.addEventListener('mousemove', function(e) {
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.clientX - r.left, e.clientY - r.top, r);
+    });
+    mainWrap.addEventListener('touchstart', function(e) {
+        e.preventDefault(); overlay.style.opacity = '1'; highlight.style.opacity = '1';
+        startHover();
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top, r);
+    }, { passive: false });
+    mainWrap.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var r = mainWrap.getBoundingClientRect();
+        handleMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top, r);
+    }, { passive: false });
+    mainWrap.addEventListener('touchend', stopHover, { passive: true });
+
+    return container;
+}
+
+SEC.buildCarousel = function(g) {
+    var c = SEC.cfg[g], track = document.getElementById(g + '-track'), dots = document.getElementById(g + '-dots');
+    track.innerHTML = ''; dots.innerHTML = '';
+    for (var si = 0; si < c.total; si++) {
+        var slide = document.createElement('div'); slide.className = 'carousel-slide';
+        var lazy = si > 0;
+        if (g === 'sg') { var wrap = document.createElement('div'); wrap.className = 'cv-wrap'; wrap.appendChild(buildSgGrid(si, lazy)); slide.appendChild(wrap); }
+        else if (g === 'sc' || g === 'scb') { var wrap = document.createElement('div'); wrap.className = 'cv-wrap'; wrap.appendChild(buildHoverZoomSlide(g, si, lazy)); slide.appendChild(wrap); }
+        else { var wrap = document.createElement('div'); wrap.className = 'cv-wrap'; wrap.appendChild(buildSliderVP(g, si, lazy)); slide.appendChild(wrap); }
+        track.appendChild(slide);
+        var dot = document.createElement('button'); dot.className = 'carousel-dot' + (si === 0 ? ' active' : '');
+        dot.dataset.group = g; dot.dataset.idx = si;
+        dot.addEventListener('click', function() { secCarouselGo(this.dataset.group, +this.dataset.idx); });
+        dots.appendChild(dot);
+    }
+    if (g !== 'sg' && g !== 'sc' && g !== 'scb') track.querySelectorAll('.cv-viewport').forEach(function(vp) { clipVP(vp); dragVP(vp); });
+};
+
+function clipVP(vp) {
+    var divs = vp._dividers, n = vp._n, vs = vp.querySelectorAll('video'), ds = vp.querySelectorAll('.cv-divider'), ls = vp.querySelectorAll('.cv-seg-label');
+    var b = [0]; for (var i = 0; i < divs.length; i++) b.push(divs[i]); b.push(1);
+    for (var i = 0; i < n; i++) vs[i].style.clipPath = 'inset(0 ' + ((1 - b[i + 1]) * 100) + '% 0 ' + (b[i] * 100) + '%)';
+    for (var i = 0; i < ds.length; i++) ds[i].style.left = (divs[i] * 100) + '%';
+    for (var i = 0; i < ls.length; i++) { ls[i].style.left = ((b[i] + b[i + 1]) / 2 * 100) + '%'; ls[i].style.opacity = (b[i + 1] - b[i]) < .08 ? '0' : '1'; }
+}
+
+function dragVP(vp) {
+    vp.querySelectorAll('.cv-divider').forEach(function(div) {
+        function start(e) {
+            e.preventDefault(); e.stopPropagation(); var idx = +div.dataset.idx, divs = vp._dividers;
+            function mv(cx) { var r = vp.getBoundingClientRect(), p = (cx - r.left) / r.width, mn = idx === 0 ? .02 : divs[idx - 1] + .02, mx = idx === divs.length - 1 ? .98 : divs[idx + 1] - .02; divs[idx] = Math.max(mn, Math.min(mx, p)); clipVP(vp); }
+            function mm(ev) { mv(ev.clientX); } function mu() { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); }
+            function tm(ev) { mv(ev.touches[0].clientX); } function te() { document.removeEventListener('touchmove', tm); document.removeEventListener('touchend', te); }
+            if (e.type === 'mousedown') { document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu); }
+            else { document.addEventListener('touchmove', tm, { passive: false }); document.addEventListener('touchend', te); }
+        }
+        div.addEventListener('mousedown', start); div.addEventListener('touchstart', start, { passive: false });
+    });
+}
+
+function secCarouselGo(g, i) {
+    var c = SEC.cfg[g], old = c.idx;
+    c.idx = Math.max(0, Math.min(c.total - 1, i));
+    document.getElementById(g + '-track').style.transform = 'translateX(-' + (c.idx * 100) + '%)';
+    document.querySelectorAll('#' + g + '-dots .carousel-dot').forEach(function(d, j) { d.classList.toggle('active', j === c.idx); });
+    var slides = document.getElementById(g + '-track').querySelectorAll('.carousel-slide');
+    if (old !== c.idx) {
+        deactivateVideos(slides[old]);
+        /* free memory for slides more than 1 away from current */
+        slides.forEach(function(slide, idx) { if (Math.abs(idx - c.idx) > 1) releaseSlide(slide); });
+    }
+    activateVideos(slides[c.idx]);
+}
+function secCarousel(g, d) { secCarouselGo(g, SEC.cfg[g].idx + d); }
+
+
+function lazyLoadSections() {
+    document.querySelectorAll('.lazy-videos').forEach(function(container) {
+        new IntersectionObserver(function(entries, obs) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) { activateVideos(e.target); obs.unobserve(e.target); }
+            });
+        }, { rootMargin: '400px' }).observe(container);
+    });
+}
+
+/* ===== Efficiency: viewport pause + hover focus ===== */
+function initEfficiency() {
+    var secs = Array.from(document.querySelectorAll('section'));
+
+    // 1. Viewport observer — pause when section scrolls out, resume when back
+    secs.forEach(function(sec) {
+        new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                e.target.querySelectorAll('video').forEach(function(v) {
+                    if (!e.isIntersecting) {
+                        if (!v.paused) { v._vp = true; v.pause(); }
+                    } else if (v._vp) {
+                        v._vp = false;
+                        if (!v._hp && !v._pv) smartPlay(v);
+                    }
+                });
+            });
+        }, { threshold: 0.05 }).observe(sec);
+    });
+
+    // 2. Hover focus — concentrate compute on the hovered section
+    secs.forEach(function(sec) {
+        sec.addEventListener('mouseenter', function() {
+            secs.forEach(function(other) {
+                if (other === sec) return;
+                other.querySelectorAll('video').forEach(function(v) {
+                    if (!v.paused) { v._hp = true; v.pause(); }
+                });
+            });
+        });
+        sec.addEventListener('mouseleave', function() {
+            secs.forEach(function(other) {
+                if (other === sec) return;
+                other.querySelectorAll('video').forEach(function(v) {
+                    if (v._hp) { v._hp = false; if (!v._vp && !v._pv) smartPlay(v); }
+                });
+            });
+        });
+    });
+}
+
+function copyBibtex(btn) {
+    navigator.clipboard.writeText(document.getElementById('bibtex-text').innerText).then(function() {
+        btn.innerHTML = '✓ Copied!';
+        setTimeout(function() { btn.innerHTML = '⎘ Copy'; }, 2500);
+    });
+}
+
+function toggleTheme() {
+    var dark = document.body.classList.toggle('dark');
+    document.getElementById('theme-icon').textContent = dark ? '☀' : '☾';
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+(function() {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('theme-icon').textContent = '☀';
+    }
+})();
+
+/* Swipe support for carousels */
+function addSwipe(el, onLeft, onRight) {
+    var sx = 0, sy = 0;
+    el.addEventListener('touchstart', function(e) {
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - sx;
+        var dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+            if (dx < 0) onLeft(); else onRight();
+        }
+    }, { passive: true });
+}
+
+window.addEventListener('load', function() {
+    /* On slow connections, downgrade the demo carousel to lazy (don't autoplay immediately) */
+    if (slowNet) {
+        document.querySelectorAll('#carousel-track video').forEach(function(v) {
+            v.removeAttribute('autoplay'); v.preload = 'none';
+            var s = v.querySelector('source');
+            if (s) { v.dataset.src = s.src; s.remove(); }
+            v.load();
+        });
+    }
+    baInit();
+    SEC.buildCarousel('sc');
+    SEC.buildCarousel('scb');
+    SEC.buildCarousel('sg');
+    lazyLoadSections();
+    initEfficiency();
+
+    /* Swipe gestures for all carousels */
+    var demoWrap = document.getElementById('carousel-track').parentElement;
+    addSwipe(demoWrap, function() { carouselMove(1); }, function() { carouselMove(-1); });
+    ['sc', 'scb', 'sg'].forEach(function(g) {
+        var wrap = document.getElementById(g + '-track').parentElement;
+        addSwipe(wrap, function() { secCarousel(g, 1); }, function() { secCarousel(g, -1); });
+    });
+});
+</script>
+</body>
+</html>
